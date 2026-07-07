@@ -49,9 +49,50 @@ navToggle?.addEventListener('click', () => {
     setNavOpen(isOpen);
 });
 
-navLinks.forEach((link) => {
-    link.addEventListener('click', () => setNavOpen(false));
+function getScrollOffset() {
+    return header?.offsetHeight ?? 80;
+}
+
+function scrollToSection(targetId, instant = false) {
+    const behavior = instant || prefersReducedMotion ? 'auto' : 'smooth';
+
+    if (!targetId || targetId === 'top') {
+        window.scrollTo({ top: 0, behavior });
+        return;
+    }
+
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const top = target.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top: Math.max(0, top), behavior });
+}
+
+function cleanUrl() {
+    const url = `${window.location.pathname}${window.location.search}`;
+    history.replaceState(null, '', url);
+}
+
+document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link) return;
+
+    const hash = link.getAttribute('href');
+    if (!hash || hash === '#') return;
+
+    event.preventDefault();
+    scrollToSection(hash.slice(1));
+    cleanUrl();
+    setNavOpen(false);
 });
+
+if (window.location.hash) {
+    const targetId = window.location.hash.slice(1);
+    requestAnimationFrame(() => {
+        scrollToSection(targetId, true);
+        cleanUrl();
+    });
+}
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
